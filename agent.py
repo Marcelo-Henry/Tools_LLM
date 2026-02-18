@@ -7,15 +7,19 @@ IMPORTANT: Escape double quotes inside strings with backslash.
 
 Output format:
 {
-  "action": "shell" | "respond",
-  "command": "shell command",
-  "content": "response message"
+  "action": "list_files" | "read_file" | "write_file" | "edit_file" | "delete_file" | "shell" | "respond",
+  "path": "filename.ext",
+  "content": "file content or response message",
+  "command": "shell command"
 }
 
 Examples:
-- User: "list files" → {"action": "shell", "command": "ls -la"}
-- User: "create hello.txt with 'hi'" → {"action": "shell", "command": "echo hi > hello.txt"}
-- User: "show file content" → {"action": "shell", "command": "cat hello.txt"}
+- User: "list files" → {"action": "list_files", "path": "."}
+- User: "read hello.txt" → {"action": "read_file", "path": "hello.txt"}
+- User: "create hello.txt with 'hi'" → {"action": "write_file", "path": "hello.txt", "content": "hi"}
+- User: "edit hello.txt to 'hello world'" → {"action": "edit_file", "path": "hello.txt", "content": "hello world"}
+- User: "delete hello.txt" → {"action": "delete_file", "path": "hello.txt"}
+- User: "run ls -la" → {"action": "shell", "command": "ls -la"}
 - User: "create python file" → {"action": "shell", "command": "echo 'print(\\\"Hello\\\")' > test.py"}
 - User: "hello" → {"action": "respond", "content": "Hello! How can I help?"}"""
 
