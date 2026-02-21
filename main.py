@@ -1,10 +1,12 @@
 # main.py
+import sys
+from title import title
+title("llm")
 from agent import Agent
 from tools import execute
 from utils import spinner, typewriter, rag_spinner
 from autocomplete import get_input
 import json
-import sys
 import threading
 import time
 
@@ -58,16 +60,15 @@ print("\033[94m" + """
                 ⠈⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠁   ⠈⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠁    ⠈⠻⠿⠟⠁            ⠈⠻⣿⠟⠁
 
 """ + "\033[0m")
-print("Olá! Como posso lhe ajudar?\n")
 
 print("Comandos disponíveis:")
 print("  /help      - Ver ajuda e exemplos")
 print("  /rag       - Sistema de conhecimento")
 print("  /model     - Ver modelo carregado no LM Studio")
 print("  /undo      - Desfazer última operação")
-print("  /quit      - Sair")
-print("\nDigite um comando em linguagem natural\n")
+print("  /quit      - Sair\n")
 
+print("Olá! Como posso lhe ajudar?\n")
 while True:
     try:
         user_input = get_input("> ")
