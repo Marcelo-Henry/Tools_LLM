@@ -1,7 +1,7 @@
 # tools.py
 import os
 import subprocess
-from diff_viewer import show_diff
+from utils import show_diff
 from undo_system import UndoSystem
 
 BASE_DIR = "./sandbox"

@@ -1,18 +1,16 @@
 # agent.py
 from openai import OpenAI
 import json
-from context_manager import ContextManager
+import re
 
 BASE_URL = "http://192.168.0.103:1234/v1" # Aqui, você precisa colocar o IP do seu servidor local onde o LM Studio está rodando. Exemplo: "http://(IP_DO_SEU_SERVIDOR):1234/v1"
 MODEL_NAME = "tanto_faz"
 MAX_HISTORY = 20  # Número máximo de mensagens no histórico
 
-SYSTEM_PROMPT = """You are an autonomous file management system.
-
-YOU CANT, NEVER, WITH NO NEGOCIATING, DONT SPECIFY THE ACTIONS.
-EVERY RESPONDE MUST BE LIKE THIS:
+SYSTEM_PROMPT = """You are an autonomous file management system..
+Every responde NEED be in JSON format, following this structure:
 {"action": "ACTION", "path": "FILE", "content": "TEXT"}
-OR, IF YOU DONT NEED TO MAKE ANY FILES:
+or, If you don't have to create, edit, read or delete a file, just respond with:
 {"action": "ACTION", "content": "TEXT"}
 
 Available actions:
@@ -27,6 +25,34 @@ Respond in Portuguese (Brazil).
 2. NEVER write [RESULT] - the system will provide it
 3. After you return JSON, system executes and shows result
 4. Then you decide the next action based on the result
+
+🎨 BE CREATIVE - COMBINE TOOLS:
+You have LIMITED tools, but you can COMBINE them creatively to achieve complex tasks!
+
+Examples of creative combinations:
+- Delete a specific line? → read_file + edit_file (rewrite without that line)
+- Rename file? → read_file + write_file (new name) + delete_file (old name)
+- Copy file? → read_file + write_file (new location)
+- Insert line at position? → read_file + edit_file (split and rejoin)
+- Replace text? → read_file + edit_file (with replacement)
+- Append to file? → read_file + edit_file (add content at end)
+- Count lines? → read_file + shell (wc -l) OR read_file + respond (count \\n)
+- Search in files? → shell (grep) OR read_file + analyze
+
+Think: "I don't have tool X, but I can achieve it by combining tools A + B + C!"
+
+Example - Delete line 2 from file.txt:
+Step 1: {"action": "read_file", "path": "file.txt"}
+Step 2: [RESULT shows 3 lines]
+Step 3: {"action": "edit_file", "path": "file.txt", "content": "line1\\nline3"}
+Step 4: {"action": "respond", "content": "Linha 2 removida com sucesso!"}
+
+Example - Rename old.txt to new.txt:
+Step 1: {"action": "read_file", "path": "old.txt"}
+Step 2: [RESULT shows content]
+Step 3: {"action": "write_file", "path": "new.txt", "content": "<content from step 2>"}
+Step 4: {"action": "delete_file", "path": "old.txt"}
+Step 5: {"action": "respond", "content": "Arquivo renomeado de old.txt para new.txt!"}
 
 🧠 REASONING FRAMEWORK:
 Before each action, ask yourself:
@@ -123,6 +149,134 @@ You can chain multiple actions by returning a JSON array:
 IMPORTANTE: Quando receber contexto do RAG, responda APENAS com base nas informações fornecidas. 
 NÃO invente, NÃO suponha, NÃO adicione informações que não estejam no contexto.
 Se a informação não estiver no contexto, diga claramente que não encontrou."""
+
+
+class ContextManager:
+    def __init__(self, max_tokens=6000):
+        self.max_tokens = max_tokens
+    
+    def estimate_tokens(self, text):
+        """Estimativa rápida de tokens (3 chars ≈ 1 token)"""
+        return len(str(text)) // 3
+    
+    def compress_history(self, history):
+        """Comprime histórico mantendo contexto essencial"""
+        if not history:
+            return history
+        
+        total_tokens = sum(self.estimate_tokens(msg["content"]) for msg in history)
+        
+        if total_tokens <= self.max_tokens:
+            return history
+        
+        # Mantém últimas 4 mensagens + resumo do resto
+        recent = history[-4:]
+        old = history[:-4]
+        
+        if not old:
+            return recent
+        
+        # Cria resumo do histórico antigo
+        summary = self._summarize_old_messages(old)
+        
+        return [{"role": "system", "content": f"[Resumo do histórico anterior: {summary}]"}] + recent
+    
+    def _summarize_old_messages(self, messages):
+        """Resume mensagens antigas"""
+        actions = []
+        for msg in messages:
+            if msg["role"] == "assistant":
+                content = msg["content"]
+                # Extrai ações do JSON
+                if "action" in content:
+                    try:
+                        data = json.loads(content)
+                        action = data.get("action", "")
+                        path = data.get("path", "")
+                        if action and path:
+                            actions.append(f"{action}({path})")
+                        elif action:
+                            actions.append(action)
+                    except:
+                        pass
+        
+        if actions:
+            return f"Executou {len(actions)} ações: {', '.join(actions[:5])}{'...' if len(actions) > 5 else ''}"
+        return f"{len(messages)} mensagens anteriores"
+    
+    def truncate_output(self, text, max_chars=500):
+        """Trunca outputs muito longos"""
+        if len(text) <= max_chars:
+            return text
+        
+        # Mostra início e fim
+        half = max_chars // 2
+        return f"{text[:half]}\n\n... ({len(text) - max_chars} caracteres omitidos) ...\n\n{text[-half:]}"
+
+
+class Planner:
+    def __init__(self, agent):
+        self.agent = agent
+    
+    def needs_planning(self, user_input):
+        """Detecta se tarefa precisa de planejamento"""
+        keywords = [
+            "todos", "cada", "múltiplos", "vários", "analise", 
+            "procure", "encontre", "delete", "modifique", "refatore"
+        ]
+        return any(kw in user_input.lower() for kw in keywords)
+    
+    def generate_plan(self, user_input):
+        """Gera plano de ações sem executar"""
+        # Injeta instrução para gerar plano
+        planning_prompt = f"""Tarefa: {user_input}
+
+Antes de executar, liste TODAS as ações necessárias em ordem.
+Formato: retorne JSON com {{"action": "plan", "steps": ["passo 1", "passo 2", ...]}}
+
+NÃO execute nada ainda, apenas planeje."""
+        
+        # Salva histórico original
+        original_history = self.agent.history.copy()
+        
+        # Limpa histórico para planejar
+        self.agent.history = []
+        
+        try:
+            response = self.agent.think(planning_prompt)
+            
+            # Restaura histórico
+            self.agent.history = original_history
+            
+            if isinstance(response, dict) and response.get("action") == "plan":
+                return response.get("steps", [])
+            
+            # Fallback: extrai passos do conteúdo
+            content = response.get("content", "")
+            steps = re.findall(r'\d+\.\s*(.+)', content)
+            return steps if steps else None
+        
+        except Exception:
+            self.agent.history = original_history
+            return None
+    
+    def show_plan(self, steps):
+        """Mostra plano formatado"""
+        print("\n📋 Plano de execução:\n")
+        for i, step in enumerate(steps, 1):
+            print(f"  {i}. {step}")
+        print()
+    
+    def confirm(self):
+        """Solicita confirmação do usuário"""
+        while True:
+            response = input("Executar este plano? (y/n): ").strip().lower()
+            if response in ['y', 'yes', 's', 'sim']:
+                return True
+            if response in ['n', 'no', 'não', 'nao']:
+                return False
+            print("Responda y (sim) ou n (não)")
+
 
 class Agent:
     def __init__(self, use_rag=False):
