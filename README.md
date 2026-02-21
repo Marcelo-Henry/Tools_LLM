@@ -28,6 +28,26 @@ python3 main.py
 > /help
 ```
 
+## ✨ Funcionalidades
+
+### 🔄 Sistema de Undo
+- Snapshots automáticos antes de operações destrutivas
+- `/undo` para reverter última ação
+- Histórico completo de operações
+- Restauração segura de arquivos
+
+### 🧠 Planejamento Multi-Step
+- Detecção automática de tarefas complexas
+- Preview do plano antes da execução
+- Confirmação interativa (y/n)
+- Evita ações acidentais
+
+### 📊 Gerenciamento de Contexto
+- Compressão inteligente de histórico
+- Truncamento de outputs longos
+- Evita overflow de context window
+- Mantém informações essenciais
+
 ## 🛠️ Tools Disponíveis
 
 O agente possui acesso às seguintes ferramentas:

@@ -2,8 +2,10 @@
 import os
 import subprocess
 from diff_viewer import show_diff
+from undo_system import UndoSystem
 
 BASE_DIR = "./sandbox"
+undo = UndoSystem()
 
 def safe_path(path: str) -> str:
     full_path = os.path.abspath(os.path.join(BASE_DIR, path))
@@ -46,6 +48,9 @@ def execute(command: dict):
     if action == "write_file":
         target = safe_path(path)
         
+        # Snapshot antes de modificar
+        undo.snapshot("write_file", target)
+        
         # Lê conteúdo antigo se existir
         old_content = ""
         if os.path.exists(target):
@@ -66,6 +71,9 @@ def execute(command: dict):
     if action == "edit_file":
         target = safe_path(path)
         
+        # Snapshot antes de modificar
+        undo.snapshot("edit_file", target)
+        
         # Lê conteúdo antigo
         old_content = ""
         if os.path.exists(target):
@@ -84,6 +92,10 @@ def execute(command: dict):
 
     if action == "delete_file":
         target = safe_path(path)
+        
+        # Snapshot antes de deletar
+        undo.snapshot("delete_file", target)
+        
         os.remove(target)
         return "Arquivo deletado"
 

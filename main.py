@@ -64,6 +64,7 @@ print("Comandos disponíveis:")
 print("  /help      - Ver ajuda e exemplos")
 print("  /rag       - Sistema de conhecimento")
 print("  /model     - Ver modelo carregado no LM Studio")
+print("  /undo      - Desfazer última operação")
 print("  /quit      - Sair")
 print("\nDigite um comando em linguagem natural\n")
 
@@ -100,9 +101,17 @@ while True:
         print("\n⚙️ Outros comandos:")
         print("  /help      - Mostrar esta ajuda")
         print("  /model     - Ver modelo carregado")
+        print("  /undo      - Desfazer última operação")
         print("  /quit      - Sair (/q, /exit, exit, quit)")
         print("\n💡 Dica: O agente executa ações automaticamente.")
         print("   Seja específico no que você quer!\n")
+        continue
+    
+    # Comando Undo
+    if user_input in ["/undo"]:
+        from tools import undo
+        result = undo.undo()
+        print(f"\n{result}\n")
         continue
     
     # Comandos RAG
@@ -219,6 +228,20 @@ while True:
         content = user_input[5:]
 
     try:
+        # Detecta se precisa de planejamento
+        from planner import Planner
+        planner = Planner(agent)
+        
+        if planner.needs_planning(user_input):
+            print("\n🤔 Analisando tarefa...\n")
+            steps = planner.generate_plan(user_input)
+            
+            if steps and len(steps) > 1:
+                planner.show_plan(steps)
+                if not planner.confirm():
+                    print("❌ Operação cancelada\n")
+                    continue
+        
         stop_event = threading.Event()
         spinner_thread = threading.Thread(target=spinner, args=(stop_event,))
         spinner_thread.start()

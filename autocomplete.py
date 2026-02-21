@@ -7,11 +7,12 @@ from prompt_toolkit.formatted_text import HTML
 class CommandCompleter(Completer):
     def __init__(self):
         self.commands = [
-            '/quit', '/q', '/exit',
+            '/quit',
             '/help',
             '/model',
             '/rag', '/rag enable', '/rag disable', '/rag status',
-            '/rag add', '/rag view', '/rag clear', '/rag help'
+            '/rag add', '/rag view', '/rag clear', '/rag help',
+            '/undo'
         ]
     
     def get_completions(self, document, complete_event):

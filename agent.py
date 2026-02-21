@@ -1,6 +1,7 @@
 # agent.py
 from openai import OpenAI
 import json
+from context_manager import ContextManager
 
 BASE_URL = "http://192.168.0.103:1234/v1" # Aqui, você precisa colocar o IP do seu servidor local onde o LM Studio está rodando. Exemplo: "http://(IP_DO_SEU_SERVIDOR):1234/v1"
 MODEL_NAME = "tanto_faz"
@@ -132,6 +133,7 @@ class Agent:
         self.history = []
         self.use_rag = use_rag
         self.rag = None  # RAG será injetado externamente quando habilitado
+        self.context_manager = ContextManager()
     
     def _log_json(self, parsed_json: dict, is_error: bool = False):
         """Salva JSON parseado em arquivo de log"""
@@ -157,14 +159,15 @@ class Agent:
         
         # Se há resultado de ação anterior, adiciona ao histórico
         if action_result:
-            self.history.append({"role": "user", "content": action_result})
+            # Trunca outputs muito longos
+            truncated = self.context_manager.truncate_output(action_result)
+            self.history.append({"role": "user", "content": truncated})
         else:
             # Adiciona mensagem do usuário ao histórico
             self.history.append({"role": "user", "content": user_input})
         
-        # Mantém apenas as últimas MAX_HISTORY mensagens
-        if len(self.history) > MAX_HISTORY:
-            self.history = self.history[-MAX_HISTORY:]
+        # Comprime histórico se necessário
+        self.history = self.context_manager.compress_history(self.history)
         
         # Reforça o papel do sistema a cada chamada
         messages = [
