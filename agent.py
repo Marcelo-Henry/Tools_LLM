@@ -15,7 +15,7 @@ OR, IF YOU DONT NEED TO MAKE ANY FILES:
 {"action": "ACTION", "content": "TEXT"}
 
 Available actions:
-- list_files, read_file, write_file, edit_file, delete_file, shell, respond
+- list_files, read_file, write_file, edit_file, delete_file, shell, respond, whatsapp, add_to_rag
 
 Format: {"action": "ACTION", "path": "FILE", "content": "TEXT"}
 
@@ -114,17 +114,38 @@ Assistant: {"action": "write_file", "path": "app.py", "content": "name = input('
 User: edit app.py to add greeting
 Assistant: {"action": "edit_file", "path": "app.py", "content": "name = input('Your name: ')\\nprint(f'Hello {name}!')\\nprint(f'Length: {len(name)}')"}
 
-REMEMBER: Use \\n for newlines, NEVER use triple quotes!"""
+REMEMBER: Use \\n for newlines, NEVER use triple quotes!
+
+You can chain multiple actions by returning a JSON array:
+[{"action": "write_file", "path": "test.txt", "content": "hello"}, {"action": "read_file", "path": "test.txt"}]
+
+add_to_rag: Add knowledge to RAG. Use "path" for files or "content" for direct text.
+
+IMPORTANTE: Quando receber contexto do RAG, responda APENAS com base nas informações fornecidas. 
+NÃO invente, NÃO suponha, NÃO adicione informações que não estejam no contexto.
+Se a informação não estiver no contexto, diga claramente que não encontrou."""
 
 class Agent:
-    def __init__(self):
+    def __init__(self, use_rag=False):
         self.client = OpenAI(
             base_url=BASE_URL,
             api_key="lm-studio"
         )
         self.history = []
+        self.use_rag = use_rag
+        self.rag = None  # RAG será injetado externamente quando habilitado
 
     def think(self, user_input: str, action_result: str = None) -> dict:
+        # Buscar contexto relevante se RAG estiver ativado
+        context = ""
+        if self.use_rag and self.rag:
+            context = self.rag.search(user_input)
+            if context:
+                print(f"🔍 RAG: Contexto encontrado ({len(context)} caracteres)")
+                user_input = f"Context:\n{context}\n\nQuestion: {user_input}"
+            else:
+                print("🔍 RAG: Nenhum contexto relevante encontrado")
+        
         # Se há resultado de ação anterior, adiciona ao histórico
         if action_result:
             self.history.append({"role": "user", "content": action_result})
@@ -200,10 +221,6 @@ class Agent:
             try:
                 commands.append(json.loads(block))
             except json.JSONDecodeError:
-                # Fix: Remove triple quotes e corrige escapes
-                if '"""' in block:
-                    block = block.replace('"""', '')
-                
                 # Fix: Corrige barras invertidas mal escapadas (\ seguido de espaço/newline)
                 block = re.sub(r'\\\s+', '', block)
                 

@@ -20,6 +20,16 @@ def execute(command: dict):
 
     if action == "respond":
         return command.get("content", "")
+    
+    if action == "add_to_rag":
+        from rag import RAG
+        rag = RAG()
+        content = command.get("content", "")
+        if path:
+            return rag.add_from_file(safe_path(path))
+        elif content:
+            return rag.add_documents([content])
+        return "Nenhum conteúdo fornecido"
 
     if action == "list_files":
         target = safe_path(path)
