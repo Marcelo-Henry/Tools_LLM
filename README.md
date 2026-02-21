@@ -54,7 +54,7 @@ python3 main.py
 - Limite de 20 mensagens no histórico
 
 ### ⚡ Comandos Ocultos
-- `!comando` - Executa comandos shell diretos (fora da sandbox, timeout 30s)
+- `!comando` - Executa comandos shell diretos (fora da sandbox, timeout 120s)
 - `clear` - Limpa a tela sem afetar o histórico do agente
 
 ## 🛠️ Tools Disponíveis
