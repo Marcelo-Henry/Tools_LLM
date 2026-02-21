@@ -54,13 +54,7 @@ while True:
         cmd = user_input[1:].strip()
         if cmd:
             try:
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=120)
-                if result.stdout:
-                    print(result.stdout)
-                if result.stderr:
-                    print(f"\033[31m{result.stderr}\033[0m", end="")
-            except subprocess.TimeoutExpired:
-                print("❌ Comando excedeu timeout de 2min\n")
+                subprocess.run(cmd, shell=True)
             except Exception as e:
                 print(f"❌ Erro: {e}\n")
         continue
