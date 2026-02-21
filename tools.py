@@ -61,7 +61,7 @@ def execute(command: dict):
         os.makedirs(os.path.dirname(target), exist_ok=True)
         with open(target, "w", encoding="utf-8") as f:
             f.write(new_content)
-        return "Arquivo criado"
+        return ""
 
     if action == "edit_file":
         target = safe_path(path)
@@ -80,7 +80,7 @@ def execute(command: dict):
         # Executa
         with open(target, "w", encoding="utf-8") as f:
             f.write(new_content)
-        return "Arquivo editado"
+        return ""
 
     if action == "delete_file":
         target = safe_path(path)

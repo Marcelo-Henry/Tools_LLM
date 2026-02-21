@@ -132,6 +132,17 @@ class Agent:
         self.history = []
         self.use_rag = use_rag
         self.rag = None  # RAG será injetado externamente quando habilitado
+    
+    def _log_json(self, parsed_json: dict, is_error: bool = False):
+        """Salva JSON parseado em arquivo de log"""
+        try:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            prefix = "⚠️ " if is_error else ""
+            with open(".txt", "a", encoding="utf-8") as f:
+                f.write(f"{prefix}[{timestamp}] {json.dumps(parsed_json, ensure_ascii=False)}\n")
+        except Exception:
+            pass  # Falha silenciosa para não interromper fluxo
 
     def think(self, user_input: str, action_result: str = None) -> dict:
         # Buscar contexto relevante se RAG estiver ativado
@@ -187,12 +198,10 @@ class Agent:
         
         # Se não encontrou em markdown, procura JSONs soltos
         if not json_blocks:
-            # Procura todos os objetos JSON válidos (incluindo multiline)
-            matches = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', content, re.DOTALL)
+            # Procura todos os objetos JSON válidos com "action" (incluindo multiline e texto ao redor)
+            matches = re.findall(r'\{[^{}]*"action"[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', content, re.DOTALL)
             for match in matches:
-                # Valida se parece com JSON válido (tem "action")
-                if '"action"' in match:
-                    json_blocks.append(match.strip())
+                json_blocks.append(match.strip())
         
         # Se ainda não encontrou, usa o conteúdo original
         if not json_blocks:
@@ -217,14 +226,21 @@ class Agent:
 
             # 🔒 Parser defensivo
             try:
-                commands.append(json.loads(block))
+                parsed = json.loads(block)
+                commands.append(parsed)
+                self._log_json(parsed)
             except json.JSONDecodeError:
+                # Salva JSON com erro de parsing
+                self._log_json({"raw_content": block, "error": "JSONDecodeError"}, is_error=True)
+                
                 # Fix: Corrige barras invertidas mal escapadas (\ seguido de espaço/newline)
                 block = re.sub(r'\\\s+', '', block)
                 
                 # Tenta novamente após limpeza
                 try:
-                    commands.append(json.loads(block))
+                    parsed = json.loads(block)
+                    commands.append(parsed)
+                    self._log_json(parsed)
                     continue
                 except:
                     pass
@@ -233,7 +249,9 @@ class Agent:
                 match = re.search(r'\{[^}]*"action"[^}]*\}', block)
                 if match:
                     try:
-                        commands.append(json.loads(match.group(0)))
+                        parsed = json.loads(match.group(0))
+                        commands.append(parsed)
+                        self._log_json(parsed)
                         continue
                     except:
                         pass
@@ -245,11 +263,13 @@ class Agent:
                     code = file_match.group(2)
                     code = re.sub(r'```\w*\n?', '', code).strip()
                     code = re.split(r'\n\nTo run this', code)[0].strip()
-                    commands.append({
+                    recovered = {
                         "action": "write_file",
                         "path": filename,
                         "content": code
-                    })
+                    }
+                    commands.append(recovered)
+                    self._log_json(recovered)
                     continue
         
         # Se não conseguiu parsear nenhum comando, retorna erro

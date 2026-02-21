@@ -58,7 +58,7 @@ print("\033[94m" + """
                 ⠈⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠁   ⠈⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠁    ⠈⠻⠿⠟⠁            ⠈⠻⣿⠟⠁
 
 """ + "\033[0m")
-print("Hello! How can I help you today?\n")
+print("Olá! Como posso lhe ajudar?\n")
 
 print("Comandos disponíveis:")
 print("  /help      - Ver ajuda e exemplos")
@@ -232,10 +232,12 @@ while True:
             command = agent.think(user_input if step == 0 else "", action_result)
             step += 1
             
-            action = command.get("action", "unknown")
+            # Para o spinner após primeira resposta
+            if step == 1:
+                stop_event.set()
+                spinner_thread.join()
             
-            # Debug: mostra JSON cru
-            print(f"\n\033[90m[DEBUG] {json.dumps(command, ensure_ascii=False)}\033[0m")
+            action = command.get("action", "unknown")
             
             # Se for resposta final, encerra o loop
             if action == "respond":
@@ -245,13 +247,21 @@ while True:
                 print()
                 break
             
+            # Mostra comando shell antes de executar
+            if action == "shell":
+                cmd_to_run = command.get("command", "")
+                print(f"\033[33m[shell]\033[0m Running: {cmd_to_run}")
+            
             # Executa ação e captura resultado
             result = execute(command)
             result_msg = result if result else "✓ Executado com sucesso"
             action_result = f"[RESULT] {result_msg}"
             
-            # Mostra ação executada
-            print(f"\033[33m[{action}]\033[0m {result_msg[:150]}{'...' if len(result_msg) > 150 else ''}")
+            # Mostra resultado da ação
+            if action == "shell":
+                print(f"\033[32m→\033[0m {result_msg[:150]}{'...' if len(result_msg) > 150 else ''}")
+            else:
+                print(f"\033[33m[{action}]\033[0m {result_msg[:150]}{'...' if len(result_msg) > 150 else ''}")
         
         if step >= max_steps:
             stop_event.set()
@@ -259,6 +269,11 @@ while True:
             print("⚠️ Limite de ações atingido")
             print()
 
+    except KeyboardInterrupt:
+        if 'stop_event' in locals():
+            stop_event.set()
+            spinner_thread.join()
+        print("\n\nFui interrompiada pelo usuário...\n")
     except Exception as e:
         if 'stop_event' in locals():
             stop_event.set()
