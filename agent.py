@@ -2,7 +2,7 @@
 from openai import OpenAI
 import json
 import re
-
+#192.168.0.103
 BASE_URL = "http://192.168.0.103:1234/v1" # Aqui, você precisa colocar o IP do seu servidor local onde o LM Studio está rodando. Exemplo: "http://(IP_DO_SEU_SERVIDOR):1234/v1"
 MODEL_NAME = "tanto_faz"
 MAX_HISTORY = 20  # Número máximo de mensagens no histórico
@@ -289,6 +289,19 @@ class Agent:
         self.rag = None  # RAG será injetado externamente quando habilitado
         self.context_manager = ContextManager()
     
+    def check_server(self):
+        """Verifica se servidor está rodando e modelo carregado"""
+        try:
+            models = self.client.models.list()
+            if not models.data:
+                return False, "Ops! Como vou responder se eu não tem modelo carregado? Carrega um modelo aí e tenta de novo!"
+            return True, None
+        except Exception as e:
+            error_msg = str(e).lower()
+            if any(x in error_msg for x in ["connection", "refused", "timeout", "timed out"]):
+                return False, f"Ops! O servidor está rodando? Pra mim deu erro aqui..."
+            return False, f"Aconteceu um erro aqui: {str(e)}"
+    
     def _log_json(self, parsed_json: dict, is_error: bool = False):
         """Salva JSON parseado em arquivo de log"""
         try:
@@ -335,12 +348,18 @@ class Agent:
             {"role": "assistant", "content": '{"action": "respond", "content": "You\'re welcome!"}'}
         ] + self.history
         
-        response = self.client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=messages,
-            temperature=0,
-            max_tokens=7000
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=messages,
+                temperature=0,
+                max_tokens=7000
+            )
+        except Exception as e:
+            error_msg = str(e).lower()
+            if any(x in error_msg for x in ["connection", "refused", "timeout", "timed out"]):
+                return {"action": "respond", "content": "Ops! O servidor está rodando? Pra mim deu erro aqui..."}
+            return {"action": "respond", "content": f"Aconteceu um erro aqui: {str(e)}"}
 
         content = response.choices[0].message.content.strip()
         
