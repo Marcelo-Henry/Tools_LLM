@@ -5,3 +5,8 @@ prompt
 .kiro/
 chroma_db/*
 rag/*
+
+# Arquivos específicos do usuário
+import_conversas_campeao.py
+sync_conversas_campeas.py
+test_rag.sh
