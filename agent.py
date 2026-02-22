@@ -2,7 +2,7 @@
 from openai import OpenAI
 import json
 import re
-#192.168.0.103
+
 BASE_URL = "http://192.168.0.103:1234/v1" # Aqui, você precisa colocar o IP do seu servidor local onde o LM Studio está rodando. Exemplo: "http://(IP_DO_SEU_SERVIDOR):1234/v1"
 MODEL_NAME = "tanto_faz"
 MAX_HISTORY = 20  # Número máximo de mensagens no histórico
