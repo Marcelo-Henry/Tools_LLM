@@ -2,7 +2,7 @@
   {
     "id": "0_2026-02-21T12:38:09.118007",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/test.txt",
+    "path": "/home/marcelo/Lyre/sandbox/test.txt",
     "timestamp": "2026-02-21T12:38:09.118007",
     "backup": "./.undo_history/0_2026-02-21T12:38:09.118007.bak",
     "existed": true
@@ -10,58 +10,81 @@
   {
     "id": "1_2026-02-21T12:40:08.589502",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/1.txt",
+    "path": "/home/marcelo/Lyre/sandbox/1.txt",
     "timestamp": "2026-02-21T12:40:08.589502",
     "existed": false
   },
   {
     "id": "2_2026-02-21T12:40:09.897180",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/2.txt",
+    "path": "/home/marcelo/Lyre/sandbox/2.txt",
     "timestamp": "2026-02-21T12:40:09.897180",
     "existed": false
   },
   {
     "id": "3_2026-02-21T12:40:11.125505",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/3.txt",
+    "path": "/home/marcelo/Lyre/sandbox/3.txt",
     "timestamp": "2026-02-21T12:40:11.125505",
     "existed": false
   },
   {
     "id": "4_2026-02-21T12:40:12.250717",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/4.txt",
+    "path": "/home/marcelo/Lyre/sandbox/4.txt",
     "timestamp": "2026-02-21T12:40:12.250717",
     "existed": false
   },
   {
     "id": "5_2026-02-21T12:40:13.480574",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/5.txt",
+    "path": "/home/marcelo/Lyre/sandbox/5.txt",
     "timestamp": "2026-02-21T12:40:13.480574",
     "existed": false
   },
   {
     "id": "6_2026-02-21T14:46:51.842960",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/test.txt",
+    "path": "/home/marcelo/Lyre/sandbox/test.txt",
     "timestamp": "2026-02-21T14:46:51.842960",
     "existed": false
   },
   {
     "id": "7_2026-02-21T14:51:24.812169",
     "action": "write_file",
-    "path": "/home/marcelo/LLM/sandbox/test.txt",
+    "path": "/home/marcelo/Lyre/sandbox/test.txt",
     "timestamp": "2026-02-21T14:51:24.812169",
     "existed": false
   },
   {
     "id": "8_2026-02-21T14:51:26.294723",
     "action": "edit_file",
-    "path": "/home/marcelo/LLM/sandbox/test.txt",
+    "path": "/home/marcelo/Lyre/sandbox/test.txt",
     "timestamp": "2026-02-21T14:51:26.294723",
     "backup": "./.undo_history/8_2026-02-21T14:51:26.294723.bak",
+    "existed": true
+  },
+  {
+    "id": "9_2026-03-17T20:48:19.829148",
+    "action": "write_file",
+    "path": "/home/marcelo/Lyre/sandbox/jogo_floresta.py",
+    "timestamp": "2026-03-17T20:48:19.829148",
+    "existed": false
+  },
+  {
+    "id": "10_2026-03-17T21:13:05.699823",
+    "action": "edit_file",
+    "path": "/home/marcelo/Lyre/sandbox/e2e.yml",
+    "timestamp": "2026-03-17T21:13:05.699823",
+    "backup": "./.undo_history/10_2026-03-17T21:13:05.699823.bak",
+    "existed": true
+  },
+  {
+    "id": "11_2026-03-17T21:13:45.400794",
+    "action": "edit_file",
+    "path": "/home/marcelo/Lyre/sandbox/e2e.yml",
+    "timestamp": "2026-03-17T21:13:45.400794",
+    "backup": "./.undo_history/11_2026-03-17T21:13:45.400794.bak",
     "existed": true
   }
 ]

@@ -5,6 +5,7 @@ prompt
 .kiro/
 chroma_db/
 rag/*
+.undo_history/*
 
 # Arquivos específicos do usuário
 import_conversas_campeao.py
