@@ -12,7 +12,6 @@ print("\x1b[31m" + r"""
                        /:/  /      |:|  |      /:/\:\  \     /:/\:\  \  
                       /:/  /       |:|__|__   /::\~\:\  \   /::\~\:\  \ 
                      /:/__/        /::::\__\ /:/\:\ \:\__\ /:/\:\ \:\__\
-
                      \:\  \       /:/~~/~    \/_|::\/:/  / \:\~\:\ \/__/
                       \:\  \     /:/  /         |:|::/  /   \:\ \:\__\  
                        \:\  \    \/__/          |:|\/__/     \:\ \/__/  
@@ -67,7 +66,24 @@ def check_dependencies():
 
 check_dependencies()
 
-# 3. Imports pesados e inicialização
+# 3. Pergunta o IP do servidor
+def ask_server_url():
+    print("Informe o endereço do servidor LLM (precisa ser OpenAI-Compatible).")
+    print("Exemplo: http://1.2.3.4:1234\n")
+    try:
+        url = input("URL do servidor: ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print()
+        sys.exit(0)
+    if not url:
+        url = "http://localhost:1234"
+    if not url.startswith("http"):
+        url = "http://" + url
+    return url.rstrip("/") + "/v1"
+
+SERVER_URL = ask_server_url()
+
+# 4. Imports pesados e inicialização
 from utils import spinner, typewriter, get_input, title
 title("lyre")
 from agent import Agent, Planner
@@ -85,7 +101,7 @@ print("  /quit      - Sair\n")
 print("Olá! Como posso lhe ajudar?\n")
 
 # Inicializa agente e título após banner
-agent = Agent(use_rag=False)
+agent = Agent(use_rag=False, base_url=SERVER_URL)
 rag = None
 rag_enabled = False
 

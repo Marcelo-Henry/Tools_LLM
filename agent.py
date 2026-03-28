@@ -285,9 +285,9 @@ NÃO execute nada ainda, apenas planeje."""
 
 
 class Agent:
-    def __init__(self, use_rag=False):
+    def __init__(self, use_rag=False, base_url=None):
         self.client = OpenAI(
-            base_url=BASE_URL,
+            base_url=base_url or BASE_URL,
             api_key="lm-studio"
         )
         self.history = []
